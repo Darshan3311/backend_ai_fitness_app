@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: fitnessapp-backend
+    env: java
+    plan: free
+    autoDeploy: true
+    buildCommand: ./mvnw -DskipTests package
+    startCommand: java -jar target/fitnessapp-0.0.1-SNAPSHOT.jar
+    healthCheckPath: /health
+    envVars:
+      - key: MONGODB_URI
+        value: mongodb+srv://Darshan:Darshan2003@cluster0.kpm1vpd.mongodb.net/fitnessapp?retryWrites=true&w=majority
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false  # set in dashboard if used
+      - key: ALLOWED_ORIGINS
+        value: https://fitnessapp-frontend.onrender.com

@@ -24,7 +24,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -44,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow preflight
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/health",
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**",
                                 "/", "/index.html", "/assets/**", "/vite.svg",
                                 "/login", "/register", "/dashboard"
@@ -60,20 +63,31 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Use origin patterns to support multiple localhost ports during dev
-        config.setAllowedOriginPatterns(List.of(
+
+        String envOrigins = System.getenv("ALLOWED_ORIGINS"); // comma-separated list
+        List<String> defaultOrigins = List.of(
                 "http://localhost:5173",
                 "http://localhost:5174",
                 "http://127.0.0.1:5173",
                 "http://127.0.0.1:5174",
                 "http://localhost:8080",
-                "http://127.0.0.1:8080"
-        ));
-        // Allow common methods (use wildcard for flexibility)
+                "http://127.0.0.1:8080",
+                "https://localhost:5173",
+                "https://localhost:5174"
+        );
+        List<String> combined;
+        if (envOrigins != null && !envOrigins.isBlank()) {
+            List<String> envList = Arrays.stream(envOrigins.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+            combined = envList;
+        } else {
+            combined = defaultOrigins;
+        }
+        config.setAllowedOriginPatterns(combined);
         config.addAllowedMethod("*");
-        // Allow all headers including preflight specific ones
         config.addAllowedHeader("*");
-        // Expose auth header
         config.addExposedHeader("Authorization");
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
