@@ -1,10 +1,11 @@
 services:
   - type: web
     name: fitnessapp-backend
+    rootDir: fitnessapp
     env: java
     plan: free
     autoDeploy: true
-    buildCommand: ./mvnw -DskipTests package
+    buildCommand: sh mvnw -DskipTests package
     startCommand: java -jar target/fitnessapp-0.0.1-SNAPSHOT.jar
     healthCheckPath: /health
     envVars:
@@ -13,6 +14,17 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: GEMINI_API_KEY
-        sync: false  # set in dashboard if used
+        sync: false
       - key: ALLOWED_ORIGINS
         value: https://fitnessapp-frontend.onrender.com
+
+  - type: static
+    name: fitnessapp-frontend
+    rootDir: frontend
+    plan: free
+    autoDeploy: true
+    buildCommand: yarn install && yarn build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://fitnessapp-backend.onrender.com/api
